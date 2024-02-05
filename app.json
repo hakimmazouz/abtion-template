@@ -1,0 +1,49 @@
+{
+  "environments": {
+    "review": {
+      "env": {
+        "HTTP_AUTH_PASSWORD": {
+          "required": true
+        },
+        "HTTP_AUTH_USERNAME": {
+          "required": true
+        },
+        "SEED_ADMIN_EMAIL": {
+          "required": true
+        },
+        "SEED_ADMIN_INITIAL_PASSWORD": {
+          "required": true
+        },
+        "DOMAIN_NAME": {
+          "required": false
+        }
+      },
+      "scripts": {
+        "postdeploy": "bin/rails db:seed"
+      }
+    }
+  },
+  "addons": [
+    "mailtrap:unpaid",
+    "rollbar:trial-5k",
+    {
+      "plan": "heroku-postgresql:mini",
+      "options": {
+        "version": "14"
+      }
+    },
+    "heroku-redis:mini"
+  ],
+  "buildpacks": [
+    {
+      "url": "heroku/nodejs"
+    },
+    {
+      "url": "heroku/ruby"
+    }
+  ],
+  "formation": {},
+  "name": "project-name-param",
+  "scripts": {},
+  "stack": "heroku-20"
+}

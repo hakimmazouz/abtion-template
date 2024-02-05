@@ -1,0 +1,216 @@
+name: CI
+
+on: [push]
+
+jobs:
+  rubocop:
+    runs-on: ubuntu-latest
+    steps:
+      - name: checkout repository
+        uses: actions/checkout@v4
+      - name: set up Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          bundler-cache: true
+      - name: Rubocop
+        run: bin/rubocop
+  brakeman:
+    runs-on: ubuntu-latest
+    steps:
+      - name: checkout repository
+        uses: actions/checkout@v4
+      - name: set up Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          bundler-cache: true
+      - name: Brakeman
+        run: bin/brakeman
+  eslint:
+    runs-on: ubuntu-latest
+    steps:
+      - name: checkout repository
+        uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: ".tool-versions"
+          cache: "yarn"
+      - name: yarn
+        run: yarn --frozen-lockfile
+      - name: lint
+        run: yarn eslint app/javascript
+  stylelint:
+    runs-on: ubuntu-latest
+    steps:
+      - name: checkout repository
+        uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: ".tool-versions"
+          cache: "yarn"
+      - name: yarn
+        run: yarn --frozen-lockfile
+      - name: stylelint
+        run: npx stylelint "app/javascript/**/*.scss"
+  erb-lint:
+    runs-on: ubuntu-latest
+    steps:
+      - name: checkout repository
+        uses: actions/checkout@v4
+      - name: set up Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          bundler-cache: true
+      - name: erb-lint
+        run: bin/erblint --lint-all
+  i18n-tasks:
+    runs-on: ubuntu-latest
+    steps:
+      - name: checkout repository
+        uses: actions/checkout@v4
+      - name: set up Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          bundler-cache: true
+      - name: i18n-tasks
+        run: bin/i18n-tasks check-normalized
+  jest:
+    runs-on: ubuntu-latest
+    steps:
+      - name: checkout repository
+        uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: ".tool-versions"
+          cache: "yarn"
+      - name: yarn
+        run: yarn --frozen-lockfile
+      - name: test
+        run: yarn test --coverage
+  prettier:
+    runs-on: ubuntu-latest
+    steps:
+      - name: checkout repository
+        uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: ".tool-versions"
+          cache: "yarn"
+      - name: yarn
+        run: yarn --frozen-lockfile
+      - name: prettier
+        run: yarn prettier app/javascript --check
+  schema:
+    runs-on: ubuntu-latest
+
+    env:
+      DATABASE_URL: postgres://postgres:postgres@localhost:5432
+      RAILS_ENV: test
+
+    services:
+      postgres:
+        image: postgres:15.5-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5432:5432
+        options: --health-cmd pg_isready --health-interval 2s --health-timeout 5s --health-retries 5
+
+    steps:
+      - name: checkout repository
+        uses: actions/checkout@v4
+      - name: set up Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          bundler-cache: true
+      - name: bundle install
+        run: |
+          bundle config path vendor/bundle
+          bundle install --jobs 4 --retry 3
+      - name: run migrations
+        run: |
+          bin/rake db:create
+          bin/rake db:migrate
+      - name: check git diff
+        run: git diff --exit-code db/schema.rb
+
+  assets-precompile:
+    runs-on: ubuntu-latest
+
+    env:
+      RAILS_ENV: production
+      HEROKU_APP_NAME: dummy
+      REDIS_URL: dummy
+      SECRET_KEY_BASE: dummy
+
+    steps:
+      - name: checkout repository
+        uses: actions/checkout@v4
+      - name: set up Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          bundler-cache: true
+      - name: install required apt packages
+        run: sudo apt-get -y install libpq-dev
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: ".tool-versions"
+          cache: "yarn"
+      - name: bundle install
+        run: |
+          bundle config path vendor/bundle
+          bundle install --jobs 4 --retry 3
+      - name: yarn install
+        run: yarn install --prod
+      - name: run bin/rails assets:precompile
+        run: bin/rails assets:precompile
+
+  rspec:
+    runs-on: ubuntu-latest
+
+    env:
+      DATABASE_SERVER: postgres://postgres:postgres@localhost:5432
+      RAILS_ENV: test
+
+    services:
+      postgres:
+        image: postgres:15.5-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_HOST_AUTH_METHOD: trust
+        ports:
+          - 5432:5432
+        options: --health-cmd pg_isready --health-interval 2s --health-timeout 5s --health-retries 5
+
+    steps:
+      - name: checkout repository
+        uses: actions/checkout@v4
+      - name: set up Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          bundler-cache: true
+      - name: install required apt packages
+        run: sudo apt-get -y install libpq-dev
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: ".tool-versions"
+          cache: "yarn"
+      - name: bundle install
+        run: |
+          bundle config path vendor/bundle
+          bundle install --jobs 4 --retry 3
+      - name: yarn
+        run: yarn --frozen-lockfile
+      - name: setup database
+        run: |
+          bin/rake db:create
+          bin/rake db:schema:load
+      - name: rspec
+        run: bin/rspec
+      - name: Archive capybara artifacts
+        uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: capybara
+          path: tmp/capybara/

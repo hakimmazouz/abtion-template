@@ -1,0 +1,13 @@
+<% if flash[:alert] || flash[:warning] || flash[:notice] %>
+  <div class="space-y-4 <%= defined?(container_class) ? container_class : "" %>">
+    <% if flash[:alert] %>
+      <%= react_component :FlashMessage, variant: :danger, children: flash[:alert] %>
+    <% end %>
+    <% if flash[:warning] %>
+      <%= react_component :FlashMessage, variant: :warning, children: flash[:warning] %>
+    <% end %>
+    <% if flash[:notice] %>
+      <%= react_component :FlashMessage, variant: :success, children: flash[:notice] %>
+    <% end %>
+  </div>
+<% end %>

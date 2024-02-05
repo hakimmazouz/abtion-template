@@ -1,0 +1,6 @@
+#!/usr/bin/env sh
+set -e
+
+bin/lint
+bin/rake shakapacker:compile
+bin/test-coverage

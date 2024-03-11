@@ -6269,9 +6269,9 @@ postcss-normalize-string@^6.0.0:
     postcss-value-parser "^4.2.0"
 
 postcss-normalize-timing-functions@^6.0.0:
-  version "6.0.0"
-  resolved "https://registry.yarnpkg.com/postcss-normalize-timing-functions/-/postcss-normalize-timing-functions-6.0.0.tgz#5f13e650b8c43351989fc5de694525cc2539841c"
-  integrity sha512-tpIXWciXBp5CiFs8sem90IWlw76FV4oi6QEWfQwyeREVwUy39VSeSqjAT7X0Qw650yAimYW5gkl2Gd871N5SQg==
+  version "6.0.2"
+  resolved "https://registry.yarnpkg.com/postcss-normalize-timing-functions/-/postcss-normalize-timing-functions-6.0.2.tgz#40cb8726cef999de984527cbd9d1db1f3e9062c0"
+  integrity sha512-a+YrtMox4TBtId/AEwbA03VcJgtyW4dGBizPl7e88cTFULYsprgHWTbfyjSLyHeBcK/Q9JhXkt2ZXiwaVHoMzA==
   dependencies:
     postcss-value-parser "^4.2.0"
 
